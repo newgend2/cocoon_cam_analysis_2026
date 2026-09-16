@@ -44,6 +44,12 @@ overlaid, including excluded records. Unsaved form fields are not exported.
   unresolved outcomes. Automated decoder disagreements are evidence only.
 - Every calendar date is labeled on the graph. Unsampled dates are shaded and
   their daily counts are blank in `calendar_timeline.csv`, distinct from zero.
+- Each daily bar plot includes its cumulative total on a labeled right axis.
+  The recapture interval plot measures calendar days from a tag's first recorded
+  appearance to each later capture date. Its overall mean weights all recapture
+  events equally, including multiple later dates for the same tag. It excludes
+  tags never recaptured; the first recorded date is a proxy for initial tagging.
+  Event intervals and plotted frequencies are available as separate CSVs.
 
 ## Repository boundary
 

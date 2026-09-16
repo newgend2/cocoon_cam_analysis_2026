@@ -193,7 +193,9 @@ for (const name of ['review','timeline']) {
 }
 const s=dataset.summary;
 $('metrics').innerHTML=[[s.unique_identities,'Unique tag identities'],[s.aruco_recapture_events,'Later-date ArUco recaptures'],[s.capture_dates,'Recorded capture dates'],[s.outside_domain,'Outside-domain appearances']].map(([n,label])=>`<div class="metric"><strong>${n.toLocaleString()}</strong><span>${label}</span></div>`).join('');
-const columns=[['capture_date','Date'],['new_bees_tagged','New tags'],['aruco_captures','ArUco captures'],['n8tag_captures','n8tag captures'],['recaptured_aruco_individuals','ArUco recaptures'],['cumulative_unique_bees','Cumulative identities']];
+$('recapture-average').textContent=s.mean_recapture_days == null ? 'No recaptures' : `${s.mean_recapture_days.toFixed(1)} days`;
+$('recapture-average-detail').textContent=s.mean_recapture_days == null ? 'No later-date ArUco captures in this snapshot.' : `First recorded capture to each recapture · ${s.aruco_recapture_events} events across ${s.recaptured_aruco_tags} ArUco tags · Range: ${s.min_recapture_days}–${s.max_recapture_days} days`;
+const columns=[['capture_date','Date'],['new_bees_tagged','New tags'],['aruco_captures','ArUco captures'],['n8tag_captures','n8tag captures'],['recaptured_aruco_individuals','ArUco recaptures'],['cumulative_unique_bees','Cumulative identities'],['cumulative_aruco_recaptures','Cumulative recaptures']];
 $('daily-table').innerHTML='<thead><tr>'+columns.map(c=>`<th scope="col">${c[1]}</th>`).join('')+'</tr></thead><tbody>'+dataset.daily.map(r=>'<tr>'+columns.map(c=>`<td>${escapeHTML(r[c[0]])}</td>`).join('')+'</tr>').join('')+'</tbody>';
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 const pattern = Array.from({ length: 4 }, () => Array(4).fill(0));

@@ -14,7 +14,14 @@ tagging_recapture_by_date.csv: the 28 capture dates, including recorded dates
   whose included captures total zero after review.
 calendar_timeline.csv: all calendar dates between the first and last capture.
   capture_records_present=false means no capture records, not observed absence.
-  Daily values are blank for these dates; cumulative identities carry forward.
+  Daily values are blank for these dates; both cumulative totals carry forward.
+recapture_intervals.csv: one row per ArUco tag on each later capture date.
+  Includes assigned_tag, first_capture_date, recapture_date, recapture_number
+  (1 for the first recapture) and days_since_first_capture. Same-day appearances
+  are deduplicated; n8tags, unassigned and outside-domain records are excluded.
+recapture_interval_counts.csv: one row per elapsed day from 1 to the longest
+  observed interval, with recapture_events giving the plotted frequency.
+  Zero means no recorded recapture event with that interval, not no sampling.
 dataset_summary.json: dataset counts and the SHA-256 of the source review export.
 
 Core fields
@@ -50,6 +57,21 @@ recaptured_aruco_individuals: ArUco tags already seen on an earlier capture date
   Multiple bee numbers or angles for the same tag on the same day count once.
   n8tag identities do not contribute to this recapture measure.
 cumulative_unique_bees: unique included tag identities observed through that date.
+cumulative_aruco_recaptures: running sum of recaptured_aruco_individuals. A tag
+  recaptured on several dates contributes an event on each date.
+
+Recapture-time definitions
+days_since_first_capture: recapture_date minus first_capture_date, in calendar
+  days. The first recorded appearance is a proxy for initial tagging; it does
+  not independently establish the physical tag application date.
+recaptured_aruco_tags: distinct ArUco identities with at least one later capture.
+mean_recapture_days: mean days_since_first_capture across all recapture events.
+  A tag with several later capture dates contributes several intervals, all
+  measured from its first appearance, not from the previous capture.
+  Tags never recaptured are excluded. This is an observed event-weighted mean,
+  not a time-to-first-recapture estimate for the full tagged population.
+min_recapture_days / max_recapture_days: shortest / longest observed intervals.
+  These summary values are null when there are no recapture events.
 
 Limits
 Outside-domain and unassigned appearances are excluded from timeline counts.

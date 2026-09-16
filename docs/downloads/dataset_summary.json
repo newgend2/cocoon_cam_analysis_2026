@@ -11,6 +11,10 @@
   "unassigned_in_domain": 6,
   "unconfirmed_n8tag": 27,
   "images_available": 1542,
+  "recaptured_aruco_tags": 119,
+  "mean_recapture_days": 7.2727272727272725,
+  "min_recapture_days": 1,
+  "max_recapture_days": 45,
   "snapshot": "2026-09-16",
   "source_review_sha256": "8d6fc3bedbce487aebdc9fb8b6aa7006aaccf29dd29cac496d4177b6a64f755e"
 }

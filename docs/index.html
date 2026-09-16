@@ -67,10 +67,12 @@
     </section>
   </main>
   <section id="timeline-panel" role="tabpanel" aria-labelledby="tab-timeline" hidden>
-    <div class="timeline-heading"><div><span class="eyebrow">PUBLISHED REVIEW SNAPSHOT · 16 SEPTEMBER 2026</span><h2>Tags through time</h2><p>First appearances, later-date recaptures and cumulative identities.</p></div><div class="download-buttons"><a href="downloads/tagging_and_recapture_graphs.svg" download>Download SVG</a><a href="downloads/tagging_and_recapture_graphs.png" download>Download PNG</a></div></div>
+    <div class="timeline-heading"><div><span class="eyebrow">PUBLISHED REVIEW SNAPSHOT · 16 SEPTEMBER 2026</span><h2>Tags through time</h2><p>Daily and cumulative counts, plus time to recapture.</p></div><div class="download-buttons"><a href="downloads/tagging_and_recapture_graphs.svg" download>Download SVG</a><a href="downloads/tagging_and_recapture_graphs.png" download>Download PNG</a></div></div>
     <div id="metrics" class="metrics"></div>
-    <p class="chart-instruction">The full timeline fits the page. Each calendar day is labeled beneath its month; gray bands mark dates with no capture records.</p>
-    <div class="graph-frame"><img src="downloads/tagging_and_recapture_graphs.svg" alt="Daily new tag identities, ArUco recaptures and cumulative identities from May 2 through July 28, 2026. Every day is labeled and grouped by month." class="timeline-graph"></div>
+    <p class="chart-instruction">Bars use the left axes; cumulative lines use the right axes. Each calendar day is labeled beneath its month; gray bands mark dates with no capture records.</p>
+    <div class="graph-frame"><img src="downloads/tagging_and_recapture_graphs.svg" alt="Daily new IDs and ArUco recapture bars with cumulative lines, May 2 through July 28, 2026. A third plot shows days from first recorded capture to each recapture, with the overall average marked." class="timeline-graph"></div>
+    <div class="recapture-metric" aria-labelledby="recapture-average-label"><div><span id="recapture-average-label">Overall average recapture time</span><strong id="recapture-average"></strong></div><p id="recapture-average-detail"></p></div>
+    <p class="methods">Recapture time uses the first recorded appearance as the initial tagging date. Each later capture date contributes one interval, measured from that first date. The average weights all recapture events equally; a tag recaptured on several dates contributes several intervals. Tags with no recapture are excluded.</p>
     <p class="methods">One tag seen several times on one date counts once. Recaptures require the same ArUco identity on a later date; n8tags do not count as recaptures. Outside-domain and unassigned appearances are excluded. The 27 unconfirmed n8tag appearances remain included in tagging totals. Tag identity does not independently prove biological identity.</p>
     <h3>Download the data</h3>
     <div class="downloads">
@@ -78,8 +80,10 @@
       <a href="downloads/appearance_records_reviewed.csv" download><strong>Reviewed appearances</strong><span>Effective identities and analysis inclusion for each capture</span></a>
       <a href="downloads/image_records_reviewed.csv" download><strong>Image review records</strong><span>Public image IDs, angles and review outcomes</span></a>
       <a href="downloads/bee_records_reviewed.csv" download><strong>Tag identity histories</strong><span>First / last appearance and per-tag capture timelines</span></a>
-      <a href="downloads/tagging_recapture_by_date.csv" download><strong>Capture-date timeline</strong><span>28 recorded capture dates and all graph counts</span></a>
+      <a href="downloads/tagging_recapture_by_date.csv" download><strong>Capture-date timeline</strong><span>28 recorded capture dates, daily counts and cumulative totals</span></a>
       <a href="downloads/calendar_timeline.csv" download><strong>Full calendar timeline</strong><span>Every day; missing capture records stay distinct from zero</span></a>
+      <a href="downloads/recapture_intervals.csv" download><strong>Recapture intervals</strong><span>ArUco tag, first capture, recapture date and elapsed days for each event</span></a>
+      <a href="downloads/recapture_interval_counts.csv" download><strong>Recapture interval distribution</strong><span>Number of recapture events at each elapsed day</span></a>
       <a href="downloads/dataset_summary.json" download><strong>Dataset summary</strong><span>Snapshot counts and review provenance checksum</span></a>
       <a href="downloads/README.txt" download><strong>Data definitions</strong><span>Column meanings, inclusion rules and limitations</span></a>
     </div>
