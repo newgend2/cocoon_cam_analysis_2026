@@ -76,9 +76,9 @@
     <p class="methods">One tag seen several times on one date counts once. Recaptures require the same ArUco identity on a later date; n8tags do not count as recaptures. Outside-domain and unassigned appearances are excluded. The 27 unconfirmed n8tag appearances remain included in tagging totals. Tag identity does not independently prove biological identity.</p>
     <h3>Download the master CSV</h3>
     <div class="downloads">
-      <a href="downloads/master_capture_history.csv" download><strong>Master capture history CSV</strong><span>One row per tag: ID, first assignment date, recapture flag and ordered recapture dates</span></a>
+      <a href="downloads/master_capture_history.csv" download><strong>Master capture history CSV</strong><span>One row per tag: ID, bee number, first assignment date, recapture flag and ordered recapture dates</span></a>
     </div>
-    <p class="methods">Dates use YYYY-MM-DD. <code>tag_id</code> retains the aruco: or n8tag: prefix. <code>first_assignment_date</code> is the first recorded appearance of that ID. <code>recaptured</code> is true if the tag has a later ArUco recapture, otherwise false. <code>recapture_1_date</code>, <code>recapture_2_date</code> and subsequent columns list distinct later dates in order; unused cells are blank. All included tag IDs are retained, including tags never recaptured.</p>
+    <p class="methods">Dates use YYYY-MM-DD. <code>tag_id</code> retains the aruco: or n8tag: prefix. The second column, <code>bee_number</code>, gives the within-day bee number on the first assignment date; multiple numbers on that date are separated by semicolons, for example 9;10. <code>first_assignment_date</code> is the first recorded appearance of that ID. <code>recaptured</code> is true if the tag has a later ArUco recapture, otherwise false. <code>recapture_1_date</code>, <code>recapture_2_date</code> and subsequent columns list distinct later dates in order; unused cells are blank. All included tag IDs are retained, including tags never recaptured.</p>
     <details><summary>Capture-date values</summary><div class="table-scroll"><table id="daily-table"></table></div></details>
   </section>
   <noscript>This viewer needs JavaScript. <a href="downloads/master_capture_history.csv" download>Download the master capture history CSV</a>.</noscript>

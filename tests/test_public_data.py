@@ -129,18 +129,19 @@ class CaptureRules(unittest.TestCase):
         for row in calendar:self.assertIn(row['capture_date'],svg)
 
     def test_master_history_order_and_exclusions(self):
-        rows=[dict(capture_date=d,assigned_tag=t,analysis_included=i) for d,t,i in [
-            ('2026-01-11','aruco:1','true'),('2026-01-03','aruco:1','true'),
-            ('2026-01-01','aruco:1','true'),('2026-01-03','aruco:1','true'),
-            ('2025-12-01','aruco:1','false'),('2026-01-02','n8tag:1','true'),
-            ('2026-01-03','n8tag:1','true'),('2026-01-01','aruco:2','true'),
-            ('2026-01-02','aruco:3','false'),('2026-01-01','','true')]]
+        rows=[dict(capture_date=d,assigned_tag=t,analysis_included=i,bee_number=b) for d,t,i,b in [
+            ('2026-01-11','aruco:1','true','8'),('2026-01-03','aruco:1','true','6'),
+            ('2026-01-01','aruco:1','true','10'),('2026-01-03','aruco:1','true','6'),
+            ('2025-12-01','aruco:1','false','1'),('2026-01-02','n8tag:1','true','5'),
+            ('2026-01-03','n8tag:1','true','7'),('2026-01-01','aruco:2','true','12'),
+            ('2026-01-02','aruco:3','false','4'),('2026-01-01','','true','13'),
+            ('2026-01-01','aruco:1','true','9'),('2026-01-01','aruco:1','true','9')]]
         master,fields=master_capture_history(rows)
-        self.assertEqual(fields,['tag_id','first_assignment_date','recaptured','recapture_1_date','recapture_2_date'])
+        self.assertEqual(fields,['tag_id','bee_number','first_assignment_date','recaptured','recapture_1_date','recapture_2_date'])
         self.assertEqual(master,[
-            dict(tag_id='aruco:1',first_assignment_date='2026-01-01',recaptured='true',recapture_1_date='2026-01-03',recapture_2_date='2026-01-11'),
-            dict(tag_id='aruco:2',first_assignment_date='2026-01-01',recaptured='false'),
-            dict(tag_id='n8tag:1',first_assignment_date='2026-01-02',recaptured='false')])
+            dict(tag_id='aruco:1',bee_number='9;10',first_assignment_date='2026-01-01',recaptured='true',recapture_1_date='2026-01-03',recapture_2_date='2026-01-11'),
+            dict(tag_id='aruco:2',bee_number='12',first_assignment_date='2026-01-01',recaptured='false'),
+            dict(tag_id='n8tag:1',bee_number='5',first_assignment_date='2026-01-02',recaptured='false')])
         self.assertEqual(master_capture_history([])[0],[])
 
     def test_public_master_reconciles_with_viewer_and_is_only_csv(self):
@@ -150,18 +151,22 @@ class CaptureRules(unittest.TestCase):
         for name in INTERNAL_EXPORT_NAMES:self.assertFalse((downloads/name).exists())
         with (downloads/'master_capture_history.csv').open(newline='') as f:
             reader=csv.DictReader(f);master=list(reader);fields=reader.fieldnames
-        self.assertEqual(fields,['tag_id','first_assignment_date','recaptured','recapture_1_date','recapture_2_date','recapture_3_date'])
+        self.assertEqual(fields,['tag_id','bee_number','first_assignment_date','recaptured','recapture_1_date','recapture_2_date','recapture_3_date'])
         self.assertEqual(len(master),995)
         self.assertEqual(len({r['tag_id'] for r in master}),995)
         self.assertEqual(sum(r['recaptured']=='true' for r in master),119)
-        self.assertEqual(sum(bool(r[f]) for r in master for f in fields[3:]),143)
+        self.assertEqual(sum(bool(r[f]) for r in master for f in fields[4:]),143)
         # Independently reconstruct dates from effective identities in the viewer.
         payload=load_js(ROOT/'docs/data.js')
         for row in master:
             dates=sorted({r['capture_date'] for r in payload['rows']
                           if r['analysis_included']=='true' and r['effective_tag']==row['tag_id']})
             self.assertEqual(row['first_assignment_date'],dates[0])
-            recaptures=[row[f] for f in fields[3:] if row[f]]
+            expected_numbers=sorted({r['bee_number'] for r in payload['rows'] if
+                r['analysis_included']=='true' and r['effective_tag']==row['tag_id'] and
+                r['capture_date']==dates[0]},key=int)
+            self.assertEqual(row['bee_number'],';'.join(expected_numbers))
+            recaptures=[row[f] for f in fields[4:] if row[f]]
             self.assertEqual(recaptures,dates[1:] if row['tag_id'].startswith('aruco:') else [])
             self.assertEqual(row['recaptured'],str(bool(recaptures)).lower())
         html=(ROOT/'docs/index.html').read_text()

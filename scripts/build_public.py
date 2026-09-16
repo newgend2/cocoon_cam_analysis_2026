@@ -98,19 +98,23 @@ def recapture_summary(intervals):
 def master_capture_history(rows):
     """One row per included tag, with ordered later-date ArUco recaptures."""
     dates_by_tag = defaultdict(set)
+    bee_numbers_by_tag_date = defaultdict(set)
     for row in rows:
         if row['analysis_included'] == 'true' and row['assigned_tag']:
             dates_by_tag[row['assigned_tag']].add(row['capture_date'])
+            bee_numbers_by_tag_date[(row['assigned_tag'], row['capture_date'])].add(row['bee_number'])
     intervals_by_tag = defaultdict(list)
     for interval in recapture_intervals(rows):
         intervals_by_tag[interval['assigned_tag']].append(interval['recapture_date'])
     max_recaptures = max((len(days) for days in intervals_by_tag.values()), default=0)
-    fields = ['tag_id', 'first_assignment_date', 'recaptured'] + [
+    fields = ['tag_id', 'bee_number', 'first_assignment_date', 'recaptured'] + [
         f'recapture_{i}_date' for i in range(1, max(1, max_recaptures)+1)]
     result = []
     for tag in sorted(dates_by_tag, key=lambda t: (t.split(':')[0], int(t.split(':')[1]))):
         recaptures = sorted(intervals_by_tag[tag])
-        result.append(dict(tag_id=tag, first_assignment_date=min(dates_by_tag[tag]),
+        first_date = min(dates_by_tag[tag])
+        bee_numbers = sorted(bee_numbers_by_tag_date[(tag, first_date)], key=int)
+        result.append(dict(tag_id=tag, bee_number=';'.join(bee_numbers), first_assignment_date=first_date,
             recaptured=str(bool(recaptures)).lower(),
             **{f'recapture_{i}_date': day for i, day in enumerate(recaptures, start=1)}))
     return result, fields

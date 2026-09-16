@@ -10,12 +10,15 @@ It needs no login, laboratory connection, application server or third-party CDN.
 Open **Image review** to filter by capture date, initially unidentified tags,
 changed assignments, outside-domain records, or other review categories.
 **Timeline & downloads** contains the graphs and the single collaborator CSV,
-`master_capture_history.csv`. It has one row per included tag, with `tag_id`,
+`master_capture_history.csv`. It has one row per included tag, with `tag_id`, `bee_number`,
 `first_assignment_date`, `recaptured` (true/false), and `recapture_1_date`,
 `recapture_2_date`, etc. Dates use YYYY-MM-DD; absent recaptures are blank.
 IDs retain the `aruco:` or `n8tag:` prefix. The first assignment date is the
 first recorded appearance, not an independently verified tag application date.
 Recaptures follow the ArUco-only rules below. Review decisions are not CSV fields.
+The second column, `bee_number`, gives the within-day bee number from the first
+assignment date. If that tag has multiple bee numbers on that date, all are
+retained in numeric order separated by semicolons (for example, `9;10`).
 
 The published dataset is the 16 September 2026 review snapshot: 1,159 appearances,
 1,543 image records, 1,130 completed decisions, 995 effective tag identities, and
