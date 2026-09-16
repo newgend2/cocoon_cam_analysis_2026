@@ -34,6 +34,8 @@ def audit(root, denylist=()):
     files += [root/n for n in ['README.md','AGENTS.md','requirements.txt','.gitignore'] if (root/n).exists()]
     for p in files:
         relative=p.relative_to(root)
+        if relative.parts[0]=='docs' and p.suffix=='.csv' and relative.as_posix()!='docs/downloads/master_capture_history.csv':
+            problems.append(f'{relative}: only the master CSV may be published')
         if p.is_symlink(): problems.append(f'{relative}: symbolic link');continue
         if p.suffix=='.webp':
             try:

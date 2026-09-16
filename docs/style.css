@@ -56,8 +56,8 @@ aside { background:#fff; border-right:1px solid var(--line); overflow-y:auto; pa
 .recapture-metric { display:flex; flex-wrap:wrap; align-items:center; gap:12px 32px; margin-top:18px; padding:18px 22px; border:1px solid var(--line); border-radius:7px; background:#fff; }
 .recapture-metric span { font-size:13px; color:#627167; } .recapture-metric strong { display:block; font-size:30px; margin-top:4px; } .recapture-metric p { flex:1; min-width:200px; font-size:13px; line-height:1.6; }
 .methods { font-size:13px; max-width:1100px; line-height:1.6; margin:18px 0 26px; }
-.downloads { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0 25px; }
-.downloads a { padding:15px; border:1px solid var(--line); border-radius:6px; background:#fff; text-decoration:none; }
+.downloads { display:block; max-width:650px; margin:12px 0 18px; }
+.downloads a { display:block; padding:20px; border:1px solid #246c59; border-radius:6px; background:#fff; text-decoration:none; }
 .downloads strong { display:block; font-size:13px; } .downloads span { display:block; font-size:12px; margin-top:5px; color:#667068; }
 details { background:#fff; border:1px solid var(--line); border-radius:6px; padding:14px; } summary { cursor:pointer; font-weight:600; }
 .table-scroll { overflow-x:auto; } table { border-collapse:collapse; font-size:13px; width:100%; margin-top:14px; } th,td { padding:8px 12px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; } th:first-child,td:first-child { text-align:left; }

@@ -23,6 +23,12 @@ REVIEW_FIELDS = ['appearance_id', 'capture_date', 'bee_number', 'assigned_tag',
     'decoder_statuses', 'review_flags', 'reviewed_tag', 'review_status', 'review_note', 'domain_status']
 INTERVAL_FIELDS = ['assigned_tag', 'first_capture_date', 'recapture_date',
     'recapture_number', 'days_since_first_capture']
+INTERNAL_EXPORT_NAMES = [
+    'appearance_records_reviewed.csv', 'image_records_reviewed.csv',
+    'bee_records_reviewed.csv', 'published_reviews.csv',
+    'tagging_recapture_by_date.csv', 'calendar_timeline.csv',
+    'recapture_intervals.csv', 'recapture_interval_counts.csv',
+    'dataset_summary.json', 'README.txt']
 
 
 def read_csv(path):
@@ -87,6 +93,46 @@ def recapture_summary(intervals):
         mean_recapture_days=sum(values)/len(values) if values else None,
         min_recapture_days=min(values) if values else None,
         max_recapture_days=max(values) if values else None)
+
+
+def master_capture_history(rows):
+    """One row per included tag, with ordered later-date ArUco recaptures."""
+    dates_by_tag = defaultdict(set)
+    for row in rows:
+        if row['analysis_included'] == 'true' and row['assigned_tag']:
+            dates_by_tag[row['assigned_tag']].add(row['capture_date'])
+    intervals_by_tag = defaultdict(list)
+    for interval in recapture_intervals(rows):
+        intervals_by_tag[interval['assigned_tag']].append(interval['recapture_date'])
+    max_recaptures = max((len(days) for days in intervals_by_tag.values()), default=0)
+    fields = ['tag_id', 'first_assignment_date', 'recaptured'] + [
+        f'recapture_{i}_date' for i in range(1, max(1, max_recaptures)+1)]
+    result = []
+    for tag in sorted(dates_by_tag, key=lambda t: (t.split(':')[0], int(t.split(':')[1]))):
+        recaptures = sorted(intervals_by_tag[tag])
+        result.append(dict(tag_id=tag, first_assignment_date=min(dates_by_tag[tag]),
+            recaptured=str(bool(recaptures)).lower(),
+            **{f'recapture_{i}_date': day for i, day in enumerate(recaptures, start=1)}))
+    return result, fields
+
+
+def build_internal_viewer(output, internal):
+    """Keep review backup available locally, outside the published directory."""
+    viewer = internal/'viewer'
+    viewer.mkdir(exist_ok=True)
+    for name in ['index.html', 'style.css', 'app.js', 'data.js', 'aruco_dict.js']:
+        shutil.copyfile(output/name, viewer/name)
+    page = viewer/'index.html'
+    page.write_text(page.read_text().replace('</body>', '<script src="review_backup.js"></script>\n</body>'))
+    shutil.copyfile(Path(__file__).with_name('internal_review_backup.js'), viewer/'review_backup.js')
+    for name in ['images', 'downloads']:
+        link = viewer/name
+        target = (output/'images' if name == 'images' else internal).resolve()
+        if link.is_symlink():
+            if link.resolve() == target:
+                continue
+            link.unlink()
+        link.symlink_to(target, target_is_directory=True)
 
 
 def plot_timeline(daily, intervals, output):
@@ -196,9 +242,22 @@ def plot_timeline(daily, intervals, output):
     plt.close(fig)
 
 
-def build(source, output):
+def build(source, output, internal):
+    if internal.resolve().is_relative_to(output.resolve()) or output.resolve().is_relative_to(internal.resolve()):
+        raise ValueError('Internal exports and the public site must use separate directories')
     downloads = output/'downloads'
     downloads.mkdir(parents=True, exist_ok=True)
+    internal.mkdir(parents=True, exist_ok=True)
+    # Preserve exact copies before retiring the old public download endpoints.
+    for name in INTERNAL_EXPORT_NAMES:
+        old = downloads/name
+        if old.exists():
+            archive = internal/'retired_public_exports'
+            archive.mkdir(exist_ok=True)
+            preserved = archive/name
+            if preserved.exists() and preserved.read_bytes() != old.read_bytes():
+                raise ValueError(f'Existing retired export differs: {name}')
+            shutil.copyfile(old, preserved)
     appearances = read_csv(source/'records/appearance_records_reviewed.csv')
     images = read_csv(source/'records/image_records_reviewed.csv')
     reviews = read_csv(source/'records/manual_review_input.csv')
@@ -232,14 +291,17 @@ def build(source, output):
     intervals = recapture_intervals(appearances)
     assert Counter(r['recapture_date'] for r in intervals) == Counter({
         r['capture_date']: r['recaptured_aruco_individuals'] for r in daily}), 'Recapture interval counts disagree with timeline'
-    write_csv(downloads/'appearance_records_reviewed.csv', appearances, APPEARANCE_FIELDS)
-    write_csv(downloads/'image_records_reviewed.csv', public_images, ['image_id','image_file','image_available']+IMAGE_FIELDS)
-    write_csv(downloads/'bee_records_reviewed.csv', bees, BEE_FIELDS)
-    write_csv(downloads/'published_reviews.csv', reviews, REVIEW_FIELDS)
-    write_csv(downloads/'tagging_recapture_by_date.csv', daily, list(daily[0]))
-    write_csv(downloads/'recapture_intervals.csv', intervals, INTERVAL_FIELDS)
+    write_csv(internal/'appearance_records_reviewed.csv', appearances, APPEARANCE_FIELDS)
+    write_csv(internal/'image_records_reviewed.csv', public_images, ['image_id','image_file','image_available']+IMAGE_FIELDS)
+    write_csv(internal/'bee_records_reviewed.csv', bees, BEE_FIELDS)
+    write_csv(internal/'published_reviews.csv', reviews, REVIEW_FIELDS)
+    write_csv(internal/'tagging_recapture_by_date.csv', daily, list(daily[0]))
+    write_csv(internal/'recapture_intervals.csv', intervals, INTERVAL_FIELDS)
+    master, master_fields = master_capture_history(appearances)
+    write_csv(downloads/'master_capture_history.csv', master, master_fields)
+    shutil.copyfile(downloads/'master_capture_history.csv', internal/'master_capture_history.csv')
     distribution = Counter(r['days_since_first_capture'] for r in intervals)
-    write_csv(downloads/'recapture_interval_counts.csv', [
+    write_csv(internal/'recapture_interval_counts.csv', [
         dict(days_since_first_capture=d, recapture_events=distribution[d])
         for d in range(1, max(distribution, default=0)+1)], ['days_since_first_capture', 'recapture_events'])
     calendar = []
@@ -254,7 +316,7 @@ def build(source, output):
         calendar.append({'capture_date': ds, 'capture_records_present': str(bool(r)).lower(),
                          **{f: r[f] if r else cumulative.get(f, '') for f in daily[0] if f!='capture_date'}})
         cursor += timedelta(days=1)
-    write_csv(downloads/'calendar_timeline.csv', calendar, list(calendar[0]))
+    write_csv(internal/'calendar_timeline.csv', calendar, list(calendar[0]))
     groups = defaultdict(list)
     for a in appearances:
         if a['analysis_included']=='true' and a['assigned_tag']:
@@ -275,8 +337,16 @@ def build(source, output):
     payload = {'rows': rows, 'daily': daily, 'summary': summary, 'reuse': reuse}
     (output/'data.js').write_text('window.COCOON_DATA = '+json.dumps(payload,separators=(',',':')).replace('<','\\u003c')+';\n')
     shutil.copyfile(source/'viewer/aruco_dict.js', output/'aruco_dict.js')
-    (downloads/'dataset_summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+    (internal/'dataset_summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+    internal_readme = internal/'retired_public_exports/README.txt'
+    if internal_readme.exists():
+        shutil.copyfile(internal_readme, internal/'README.txt')
     plot_timeline(daily, intervals, downloads)
+    for name in ['tagging_and_recapture_graphs.svg', 'tagging_and_recapture_graphs.png']:
+        shutil.copyfile(downloads/name, internal/name)
+    build_internal_viewer(output, internal)
+    for name in INTERNAL_EXPORT_NAMES:
+        (downloads/name).unlink(missing_ok=True)
     print(json.dumps(summary, indent=2))
 
 
@@ -284,5 +354,6 @@ if __name__ == '__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--source',type=Path,required=True)
     parser.add_argument('--output',type=Path,default=Path('docs'))
+    parser.add_argument('--internal-output',type=Path,default=Path('private/analysis_exports'))
     args=parser.parse_args()
-    build(args.source,args.output)
+    build(args.source,args.output,args.internal_output)

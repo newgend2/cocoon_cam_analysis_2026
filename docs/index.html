@@ -56,12 +56,12 @@
       </div>
       <div class="form">
         <h3>Review this appearance</h3>
-        <p class="form-intro">The fields start with the published review. Changes stay in this browser; download a backup to share a proposed correction. The published timeline is unchanged.</p>
+        <p class="form-intro">The fields start with the published review. Changes stay in this browser and do not alter the published timeline or master CSV.</p>
         <label>Reviewed tag <input id="reviewed-tag" placeholder="aruco:123 or n8tag:12"></label>
         <label>Status <select id="review-status"><option value="">No completed decision</option><option>confirmed</option><option>corrected</option><option>uncertain</option><option>unreadable</option><option>duplicate</option><option value="dorsal">dorsal view</option></select></label>
         <label class="wide">Note <textarea id="review-note" rows="2" placeholder="What is visible in the image?"></textarea></label>
         <label class="check"><input id="outside-domain" type="checkbox"> Outside domain (test image or excluded capture)</label>
-        <div class="form-actions"><button id="save" class="primary">Save in this browser & next</button><button id="download">Download review backup CSV</button><span id="save-status" role="status"></span></div>
+        <div class="form-actions"><button id="save" class="primary">Save in this browser & next</button><span id="save-status" role="status"></span></div>
       </div>
       <p class="help">Use ← / → to navigate and S to save. Open an image for its full resolution. Web copies are compressed; original captures are preserved separately.</p>
     </section>
@@ -74,22 +74,14 @@
     <div class="recapture-metric" aria-labelledby="recapture-average-label"><div><span id="recapture-average-label">Overall average recapture time</span><strong id="recapture-average"></strong></div><p id="recapture-average-detail"></p></div>
     <p class="methods">Recapture time uses the first recorded appearance as the initial tagging date. Each later capture date contributes one interval, measured from that first date. The average weights all recapture events equally; a tag recaptured on several dates contributes several intervals. Tags with no recapture are excluded.</p>
     <p class="methods">One tag seen several times on one date counts once. Recaptures require the same ArUco identity on a later date; n8tags do not count as recaptures. Outside-domain and unassigned appearances are excluded. The 27 unconfirmed n8tag appearances remain included in tagging totals. Tag identity does not independently prove biological identity.</p>
-    <h3>Download the data</h3>
+    <h3>Download the master CSV</h3>
     <div class="downloads">
-      <a href="downloads/published_reviews.csv" download><strong>Published review decisions</strong><span>Original assignments, reviewed tags, statuses and notes</span></a>
-      <a href="downloads/appearance_records_reviewed.csv" download><strong>Reviewed appearances</strong><span>Effective identities and analysis inclusion for each capture</span></a>
-      <a href="downloads/image_records_reviewed.csv" download><strong>Image review records</strong><span>Public image IDs, angles and review outcomes</span></a>
-      <a href="downloads/bee_records_reviewed.csv" download><strong>Tag identity histories</strong><span>First / last appearance and per-tag capture timelines</span></a>
-      <a href="downloads/tagging_recapture_by_date.csv" download><strong>Capture-date timeline</strong><span>28 recorded capture dates, daily counts and cumulative totals</span></a>
-      <a href="downloads/calendar_timeline.csv" download><strong>Full calendar timeline</strong><span>Every day; missing capture records stay distinct from zero</span></a>
-      <a href="downloads/recapture_intervals.csv" download><strong>Recapture intervals</strong><span>ArUco tag, first capture, recapture date and elapsed days for each event</span></a>
-      <a href="downloads/recapture_interval_counts.csv" download><strong>Recapture interval distribution</strong><span>Number of recapture events at each elapsed day</span></a>
-      <a href="downloads/dataset_summary.json" download><strong>Dataset summary</strong><span>Snapshot counts and review provenance checksum</span></a>
-      <a href="downloads/README.txt" download><strong>Data definitions</strong><span>Column meanings, inclusion rules and limitations</span></a>
+      <a href="downloads/master_capture_history.csv" download><strong>Master capture history CSV</strong><span>One row per tag: ID, first assignment date, recapture flag and ordered recapture dates</span></a>
     </div>
+    <p class="methods">Dates use YYYY-MM-DD. <code>tag_id</code> retains the aruco: or n8tag: prefix. <code>first_assignment_date</code> is the first recorded appearance of that ID. <code>recaptured</code> is true if the tag has a later ArUco recapture, otherwise false. <code>recapture_1_date</code>, <code>recapture_2_date</code> and subsequent columns list distinct later dates in order; unused cells are blank. All included tag IDs are retained, including tags never recaptured.</p>
     <details><summary>Capture-date values</summary><div class="table-scroll"><table id="daily-table"></table></div></details>
   </section>
-  <noscript>This viewer needs JavaScript. All reviewed CSVs and graphs are available in the downloads directory.</noscript>
+  <noscript>This viewer needs JavaScript. <a href="downloads/master_capture_history.csv" download>Download the master capture history CSV</a>.</noscript>
   <script src="data.js"></script><script src="aruco_dict.js"></script><script src="app.js"></script>
 </body>
 </html>

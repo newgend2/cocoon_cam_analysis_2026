@@ -8,11 +8,13 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'scripts'))
-from build_public import timeline, recapture_intervals, recapture_summary
+from build_public import timeline, recapture_intervals, recapture_summary, master_capture_history, INTERNAL_EXPORT_NAMES, load_js
+INTERNAL=ROOT/'private/analysis_exports'
+requires_internal=unittest.skipUnless(INTERNAL.exists(), 'Internal export checks require a local rebuild')
 
 
 def table(name):
-    with (ROOT/'docs/downloads'/name).open(newline='') as f:return list(csv.DictReader(f))
+    with (INTERNAL/name).open(newline='') as f:return list(csv.DictReader(f))
 
 
 class CaptureRules(unittest.TestCase):
@@ -46,6 +48,7 @@ class CaptureRules(unittest.TestCase):
         self.assertIsNone(recapture_summary([])['mean_recapture_days'])
         self.assertEqual(recapture_intervals(rows[-2:]), [])
 
+    @requires_internal
     def test_published_snapshot_preserved(self):
         rows=table('appearance_records_reviewed.csv'); reviews=table('published_reviews.csv')
         self.assertEqual(len(rows),1159);self.assertEqual(len({r['appearance_id'] for r in rows}),1159)
@@ -65,6 +68,7 @@ class CaptureRules(unittest.TestCase):
         self.assertEqual(sum(r['recaptured_aruco_individuals'] for r in daily),143)
         self.assertEqual(daily[-1]['cumulative_aruco_recaptures'],143)
 
+    @requires_internal
     def test_published_intervals_and_mean_reconcile(self):
         intervals=table('recapture_intervals.csv')
         self.assertEqual(len(intervals),143)
@@ -84,17 +88,19 @@ class CaptureRules(unittest.TestCase):
         counts=table('recapture_interval_counts.csv')
         self.assertEqual([int(r['days_since_first_capture']) for r in counts],list(range(1,46)))
         self.assertEqual(Counter(durations),Counter({int(r['days_since_first_capture']):int(r['recapture_events']) for r in counts}))
-        summary=json.loads((ROOT/'docs/downloads/dataset_summary.json').read_text())
+        summary=json.loads((INTERNAL/'dataset_summary.json').read_text())
         self.assertAlmostEqual(summary['mean_recapture_days'],1040/143)
         self.assertEqual(summary['recaptured_aruco_tags'],119)
         self.assertEqual((summary['min_recapture_days'],summary['max_recapture_days']),(1,45))
 
+    @requires_internal
     def test_unconfirmed_n8tags_remain_explicit(self):
         rows=table('appearance_records_reviewed.csv')
         unconfirmed=[r for r in rows if r['tag_type']=='n8tag' and not r['review_status'] and r['analysis_included']=='true']
         self.assertEqual(len(unconfirmed),27)
         self.assertTrue(all(r['assigned_tag'].startswith('n8tag:') for r in unconfirmed))
 
+    @requires_internal
     def test_image_and_export_integrity(self):
         images=table('image_records_reviewed.csv')
         self.assertEqual(len(images),1543)
@@ -106,6 +112,7 @@ class CaptureRules(unittest.TestCase):
             with file.open() as f:fields=next(csv.reader(f))
             self.assertFalse(set(fields)&{'path','source_paths','relative_path','source_path'})
 
+    @requires_internal
     def test_daily_axis_and_missing_days(self):
         calendar=table('calendar_timeline.csv')
         self.assertEqual(len(calendar),88)
@@ -120,6 +127,58 @@ class CaptureRules(unittest.TestCase):
             self.assertEqual(int(row['cumulative_aruco_recaptures']),cumulative_recaptures)
         svg=(ROOT/'docs/downloads/tagging_and_recapture_graphs.svg').read_text()
         for row in calendar:self.assertIn(row['capture_date'],svg)
+
+    def test_master_history_order_and_exclusions(self):
+        rows=[dict(capture_date=d,assigned_tag=t,analysis_included=i) for d,t,i in [
+            ('2026-01-11','aruco:1','true'),('2026-01-03','aruco:1','true'),
+            ('2026-01-01','aruco:1','true'),('2026-01-03','aruco:1','true'),
+            ('2025-12-01','aruco:1','false'),('2026-01-02','n8tag:1','true'),
+            ('2026-01-03','n8tag:1','true'),('2026-01-01','aruco:2','true'),
+            ('2026-01-02','aruco:3','false'),('2026-01-01','','true')]]
+        master,fields=master_capture_history(rows)
+        self.assertEqual(fields,['tag_id','first_assignment_date','recaptured','recapture_1_date','recapture_2_date'])
+        self.assertEqual(master,[
+            dict(tag_id='aruco:1',first_assignment_date='2026-01-01',recaptured='true',recapture_1_date='2026-01-03',recapture_2_date='2026-01-11'),
+            dict(tag_id='aruco:2',first_assignment_date='2026-01-01',recaptured='false'),
+            dict(tag_id='n8tag:1',first_assignment_date='2026-01-02',recaptured='false')])
+        self.assertEqual(master_capture_history([])[0],[])
+
+    def test_public_master_reconciles_with_viewer_and_is_only_csv(self):
+        downloads=ROOT/'docs/downloads'
+        self.assertEqual({p.name for p in downloads.iterdir()}, {
+            'master_capture_history.csv','tagging_and_recapture_graphs.svg','tagging_and_recapture_graphs.png'})
+        for name in INTERNAL_EXPORT_NAMES:self.assertFalse((downloads/name).exists())
+        with (downloads/'master_capture_history.csv').open(newline='') as f:
+            reader=csv.DictReader(f);master=list(reader);fields=reader.fieldnames
+        self.assertEqual(fields,['tag_id','first_assignment_date','recaptured','recapture_1_date','recapture_2_date','recapture_3_date'])
+        self.assertEqual(len(master),995)
+        self.assertEqual(len({r['tag_id'] for r in master}),995)
+        self.assertEqual(sum(r['recaptured']=='true' for r in master),119)
+        self.assertEqual(sum(bool(r[f]) for r in master for f in fields[3:]),143)
+        # Independently reconstruct dates from effective identities in the viewer.
+        payload=load_js(ROOT/'docs/data.js')
+        for row in master:
+            dates=sorted({r['capture_date'] for r in payload['rows']
+                          if r['analysis_included']=='true' and r['effective_tag']==row['tag_id']})
+            self.assertEqual(row['first_assignment_date'],dates[0])
+            recaptures=[row[f] for f in fields[3:] if row[f]]
+            self.assertEqual(recaptures,dates[1:] if row['tag_id'].startswith('aruco:') else [])
+            self.assertEqual(row['recaptured'],str(bool(recaptures)).lower())
+        html=(ROOT/'docs/index.html').read_text()
+        self.assertIn('downloads/master_capture_history.csv',html)
+        self.assertNotIn('id="download"',html)
+        self.assertNotIn('review_backup.js',html)
+        for name in INTERNAL_EXPORT_NAMES:self.assertNotIn('downloads/'+name,html)
+
+    @requires_internal
+    def test_retired_exports_preserved_outside_public_site(self):
+        archive=INTERNAL/'retired_public_exports'
+        for name in INTERNAL_EXPORT_NAMES:
+            self.assertTrue((INTERNAL/name).is_file())
+            if (archive/name).exists():
+                self.assertEqual((archive/name).read_bytes(),(INTERNAL/name).read_bytes())
+        self.assertIn('review_backup.js',(INTERNAL/'viewer/index.html').read_text())
+        self.assertTrue((INTERNAL/'viewer/review_backup.js').is_file())
 
 
 if __name__=='__main__':unittest.main()

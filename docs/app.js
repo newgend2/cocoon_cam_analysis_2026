@@ -17,7 +17,7 @@ try {
   }
 } catch (_) {
   $('storage-notice').hidden = false;
-  $('storage-notice').textContent = 'Browser storage could not be read. The published reviews are intact. Download a backup after making changes.';
+  $('storage-notice').textContent = 'Browser storage could not be read. The published reviews are intact. Local changes may not persist.';
 }
 let filtered = [], index = 0, dirty = false;
 const review = row => edits[row.appearance_id] || row;
@@ -147,27 +147,13 @@ function save() {
   }
   const proposed={...edits,[row.appearance_id]:edit};
   try { localStorage.setItem(STORAGE_KEY,JSON.stringify(proposed)); }
-  catch (_) { edits=proposed;dirty=false;updateSummary();$('save-status').textContent='Browser storage failed. Change is in memory only—download a backup now.';return; }
+  catch (_) { edits=proposed;dirty=false;updateSummary();$('save-status').textContent='Browser storage failed. Change is in memory only; keep this page open.';return; }
   edits=proposed;dirty=false;
   const oldIndex=index, nextId=filtered[index+1]?.appearance_id;
   filtered=candidates();
   const nextIndex=filtered.findIndex(r=>r.appearance_id===nextId);
   index=nextIndex>=0?nextIndex:Math.min(oldIndex,Math.max(0,filtered.length-1));
-  render();$('save-status').textContent=`Saved ${row.appearance_id} in this browser. Download to share.`;
-}
-function csvCell(value) {
-  let text=String(value??'');
-  if (/^[=+@\-\t\r]/.test(text)) text="'"+text;
-  return '"'+text.replaceAll('"','""')+'"';
-}
-function download() {
-  const fields=['appearance_id','capture_date','bee_number','assigned_tag','tag_type','tag_id','status','image_count','angles','declared_tags','decoder_statuses','review_flags','reviewed_tag','review_status','review_note','domain_status'];
-  const lines=[fields.map(csvCell).join(',')];
-  for (const row of rows) lines.push(fields.map(f=>csvCell(REVIEW_FIELDS.includes(f)?review(row)[f]:row[f])).join(','));
-  const blob=new Blob([lines.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob), link=document.createElement('a');
-  link.href=url;link.download=`cocoon_cam_review_backup_${new Date().toISOString().replace(/[:.]/g,'-')}.csv`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  $('save-status').textContent='Downloaded saved reviews. Any unsaved fields are not in the backup.';
+  render();$('save-status').textContent=`Saved ${row.appearance_id} in this browser.`;
 }
 for (const day of [...new Set(rows.map(r=>r.capture_date))].sort()) {
   const opt=document.createElement('option');opt.value=day;opt.textContent=`${day} (${rows.filter(r=>r.capture_date===day).length})`;$('date').append(opt);
@@ -179,7 +165,7 @@ for (const id of ['date','queue']) {
 $('search').oninput=()=> {if (dirty) { $('save-status').textContent='Save the current changes before searching.';return;}index=0;render();};
 $('previous').onclick=()=>{if (canLeave()&&index>0){index--;render();}};
 $('next').onclick=()=>{if(canLeave()&&index<filtered.length-1){index++;render();}};
-$('save').onclick=save; $('download').onclick=download;
+$('save').onclick=save;
 for (const id of ['reviewed-tag','review-status','review-note','outside-domain']) $(id).addEventListener('input',()=>{dirty=true;});
 $('review-status').addEventListener('change',()=> {if ($('review-status').value==='dorsal') $('reviewed-tag').value='';});
 function switchTab(name) {
