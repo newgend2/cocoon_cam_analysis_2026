@@ -100,7 +100,8 @@ def plot_timeline(daily, output):
     fig.subplots_adjust(left=.055, right=.987, top=.91, bottom=.17, hspace=.42)
     fig.savefig(output/'tagging_and_recapture_graphs.svg', metadata={'Date': None, 'Creator': 'Cocoon cam analysis'})
     svg_path = output/'tagging_and_recapture_graphs.svg'
-    svg_path.write_text(svg_path.read_text().replace("font-family: 'DejaVu Sans'", "font-family: 'DejaVu Sans', Arial, sans-serif"))
+    svg_text = svg_path.read_text().replace("font-family: 'DejaVu Sans'", "font-family: 'DejaVu Sans', Arial, sans-serif")
+    svg_path.write_text('\n'.join(line.rstrip() for line in svg_text.splitlines())+'\n')
     fig.savefig(output/'tagging_and_recapture_graphs.png', dpi=150, metadata={'Software': 'Cocoon cam analysis'})
     plt.close(fig)
 
