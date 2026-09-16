@@ -66,9 +66,9 @@ def plot_timeline(daily, output):
     import matplotlib.dates as mdates
     days = [date.fromisoformat(r['capture_date']) for r in daily]
     plt.rcParams.update({'font.family': 'DejaVu Sans', 'svg.fonttype': 'none', 'svg.hashsalt': 'cocoon-cam-2026'})
-    fig, axes = plt.subplots(3, 1, figsize=(32, 12), sharex=True,
+    fig, axes = plt.subplots(3, 1, figsize=(16, 8), sharex=True,
                              gridspec_kw={'height_ratios': [1, 1, 1.2]})
-    fig.suptitle('Cocoon cam · Emerald Queen 2026', x=.055, ha='left', fontsize=24, fontweight='bold')
+    fig.suptitle('Cocoon cam · Emerald Queen 2026', x=.065, ha='left', fontsize=19, fontweight='bold')
     axes[0].bar(days, [r['new_bees_tagged'] for r in daily], width=.72, color='#246c59')
     axes[1].bar(days, [r['recaptured_aruco_individuals'] for r in daily], width=.72, color='#b17d22')
     axes[2].step(days, [r['cumulative_unique_bees'] for r in daily], where='post', color='#345e95', lw=2)
@@ -81,23 +81,39 @@ def plot_timeline(daily, output):
                 ax.axvspan(mdates.date2num(cursor)-.5, mdates.date2num(cursor)+.5, color='#f0f0ed', zorder=0)
         cursor += timedelta(days=1)
     for ax, title in zip(axes, titles):
-        ax.set_title(title, loc='left', fontsize=16, pad=10)
+        ax.set_title(title, loc='left', fontsize=12, pad=9)
         ax.set_ylabel('Tag identities' if ax is axes[2] else 'Count')
         ax.set_ylim(bottom=0)
         ax.spines[['top', 'right']].set_visible(False)
         ax.grid(axis='y', alpha=.2)
     for ax, field in [(axes[0], 'new_bees_tagged'), (axes[1], 'recaptured_aruco_individuals')]:
-        for d, r in zip(days, daily):
+        ax.set_ylim(0,max(r[field] for r in daily)*1.22)
+        for i, (d, r) in enumerate(zip(days, daily)):
             if r[field]:
-                ax.annotate(str(r[field]), (mdates.date2num(d), r[field]), xytext=(0, 4), textcoords='offset points', ha='center', fontsize=8)
+                offset=11 if i and (d-days[i-1]).days==1 and abs(r[field]-daily[i-1][field])<=10 else 4
+                ax.annotate(str(r[field]), (mdates.date2num(d), r[field]), xytext=(0, offset), textcoords='offset points', ha='center', fontsize=8)
     axes[-1].xaxis.set_major_locator(mdates.DayLocator(interval=1))
-    axes[-1].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    axes[-1].xaxis.set_major_formatter(mdates.DateFormatter('%d'))
     axes[-1].set_xlim(mdates.date2num(days[0])-.6, mdates.date2num(days[-1])+.6)
-    plt.setp(axes[-1].get_xticklabels(), rotation=65, ha='right', fontsize=9)
-    axes[-1].set_xlabel('Calendar date · gray bands: no capture records (not zero observed captures)', labelpad=14)
-    fig.text(.055, .018, 'Same tag + same day counts once. Recaptures require a later date and an ArUco tag. Outside-domain and unassigned records excluded.\n'
-             'Unconfirmed n8tag assignments remain included. Browser proposals do not change this published snapshot.', fontsize=11)
-    fig.subplots_adjust(left=.055, right=.987, top=.91, bottom=.17, hspace=.42)
+    plt.setp(axes[-1].get_xticklabels(), rotation=90, ha='center', fontsize=9)
+    # Each day retains its full date as a stable SVG identifier; visible day
+    # numbers are grouped by month to stay readable when the figure fits a page.
+    for tick, location in zip(axes[-1].get_xticklabels(), axes[-1].get_xticks()):
+        tick.set_gid('date-'+mdates.num2date(location).strftime('%Y-%m-%d'))
+    month_start=days[0].replace(day=1)
+    while month_start <= days[-1]:
+        next_month=(month_start.replace(day=28)+timedelta(days=4)).replace(day=1)
+        lo=max(month_start,days[0]);hi=min(next_month-timedelta(days=1),days[-1])
+        left=mdates.date2num(lo)-.45;right=mdates.date2num(hi)+.45
+        axes[-1].plot([left,right],[-.24,-.24],transform=axes[-1].get_xaxis_transform(),clip_on=False,color='#79847d',lw=.8)
+        axes[-1].text((left+right)/2,-.30,month_start.strftime('%B %Y'),
+                      transform=axes[-1].get_xaxis_transform(),ha='center',va='top',fontsize=10,fontweight='bold')
+        if month_start>days[0]:
+            for ax in axes:ax.axvline(mdates.date2num(month_start)-.5,color='#b4bcb6',lw=.8)
+        month_start=next_month
+    fig.text(.065,.035,'Gray bands: no capture records (not zero observed captures). Same tag + same day counts once. ArUco recaptures require a later date.\n'
+             'Outside-domain and unassigned records excluded; unconfirmed n8tags remain included. Browser proposals do not change this snapshot.',fontsize=8.5)
+    fig.subplots_adjust(left=.065, right=.987, top=.90, bottom=.22, hspace=.53)
     fig.savefig(output/'tagging_and_recapture_graphs.svg', metadata={'Date': None, 'Creator': 'Cocoon cam analysis'})
     svg_path = output/'tagging_and_recapture_graphs.svg'
     svg_text = svg_path.read_text().replace("font-family: 'DejaVu Sans'", "font-family: 'DejaVu Sans', Arial, sans-serif")
