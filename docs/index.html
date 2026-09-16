@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Cocoon cam · Emerald Queen 2026</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="eyebrow">BUMBLE BEE POPULATION STUDY</span><h1>Cocoon cam <span>Emerald Queen · 2026</span></h1></div>
+    <nav role="tablist" aria-label="Study views">
+      <button id="tab-review" role="tab" aria-selected="true" aria-controls="review-panel">Image review</button>
+      <button id="tab-timeline" role="tab" aria-selected="false" aria-controls="timeline-panel" tabindex="-1">Timeline & downloads</button>
+    </nav>
+  </header>
+  <div class="study-summary" id="summary" aria-live="polite">Loading reviewed dataset…</div>
+  <div id="storage-notice" class="notice" hidden></div>
+  <main id="review-panel" role="tabpanel" aria-labelledby="tab-review">
+    <aside>
+      <div class="filters">
+        <label>Capture date <select id="date"><option value="">All dates</option></select></label>
+        <label>Review filter <select id="queue">
+          <option value="all">All appearances</option>
+          <option value="unidentified">Initially unidentified</option>
+          <option value="changed">Reviewed tag differs from original</option>
+          <option value="disregarded">Outside domain</option>
+          <option value="unreviewed">No completed review decision</option>
+          <option value="critical">Original assignment critical</option>
+          <option value="decoder">Original decoder flags</option>
+          <option value="reuse">Same-day tag reuse</option>
+        </select></label>
+        <input id="search" type="search" aria-label="Search appearances" placeholder="Search bee number, date or tag…">
+        <p id="filter-help" class="help"></p>
+      </div>
+      <div class="navrow"><button id="previous" aria-label="Previous appearance">← Previous</button><span id="position"></span><button id="next" aria-label="Next appearance">Next →</button></div>
+      <div class="audit-legend"><span>● Match</span><span>● Different / unresolved</span><span>● No completed decision</span></div>
+      <div id="list" class="list"></div>
+    </aside>
+    <section class="review">
+      <div id="case-header"></div>
+      <div id="flags" class="flags"></div>
+      <div class="visual-review">
+        <div id="images" class="images"></div>
+        <div class="aruco-panel">
+          <h3>ArUco 4 × 4 decoder</h3>
+          <p>Click the white interior cells you see on the tag. Rotations are checked automatically.</p>
+          <div id="aruco-grid" class="aruco-grid" aria-label="Manual ArUco pattern"></div>
+          <strong id="aruco-result">No exact dictionary match</strong>
+          <div class="decoder-actions"><button id="aruco-use" disabled>Use ID in review</button><button id="aruco-reset">Reset pattern</button></div>
+          <p id="aruco-autofill" class="help"></p>
+          <p class="help">Project dictionary: 4,000 codes. ArUco and n8tag identities are separate.</p>
+        </div>
+      </div>
+      <div class="form">
+        <h3>Review this appearance</h3>
+        <p class="form-intro">The fields start with the published review. Changes stay in this browser; download a backup to share a proposed correction. The published timeline is unchanged.</p>
+        <label>Reviewed tag <input id="reviewed-tag" placeholder="aruco:123 or n8tag:12"></label>
+        <label>Status <select id="review-status"><option value="">No completed decision</option><option>confirmed</option><option>corrected</option><option>uncertain</option><option>unreadable</option><option>duplicate</option><option value="dorsal">dorsal view</option></select></label>
+        <label class="wide">Note <textarea id="review-note" rows="2" placeholder="What is visible in the image?"></textarea></label>
+        <label class="check"><input id="outside-domain" type="checkbox"> Outside domain (test image or excluded capture)</label>
+        <div class="form-actions"><button id="save" class="primary">Save in this browser & next</button><button id="download">Download review backup CSV</button><span id="save-status" role="status"></span></div>
+      </div>
+      <p class="help">Use ← / → to navigate and S to save. Open an image for its full resolution. Web copies are compressed; original captures are preserved separately.</p>
+    </section>
+  </main>
+  <section id="timeline-panel" role="tabpanel" aria-labelledby="tab-timeline" hidden>
+    <div class="timeline-heading"><div><span class="eyebrow">PUBLISHED REVIEW SNAPSHOT · 16 SEPTEMBER 2026</span><h2>Tags through time</h2><p>First appearances, later-date recaptures and cumulative identities.</p></div><div class="download-buttons"><a href="downloads/tagging_and_recapture_graphs.svg" download>Download SVG</a><a href="downloads/tagging_and_recapture_graphs.png" download>Download PNG</a></div></div>
+    <div id="metrics" class="metrics"></div>
+    <p class="chart-instruction">Every calendar day is labeled. Scroll horizontally to inspect the full date axis. Gray bands mark dates with no capture records.</p>
+    <div class="graph-scroll" tabindex="0" aria-label="Timeline graph; scroll horizontally"><img src="downloads/tagging_and_recapture_graphs.svg" alt="Daily new tag identities, ArUco recaptures and cumulative identities, with every calendar date labeled." class="timeline-graph"></div>
+    <p class="methods">One tag seen several times on one date counts once. Recaptures require the same ArUco identity on a later date; n8tags do not count as recaptures. Outside-domain and unassigned appearances are excluded. The 27 unconfirmed n8tag appearances remain included in tagging totals. Tag identity does not independently prove biological identity.</p>
+    <h3>Download the data</h3>
+    <div class="downloads">
+      <a href="downloads/published_reviews.csv" download><strong>Published review decisions</strong><span>Original assignments, reviewed tags, statuses and notes</span></a>
+      <a href="downloads/appearance_records_reviewed.csv" download><strong>Reviewed appearances</strong><span>Effective identities and analysis inclusion for each capture</span></a>
+      <a href="downloads/image_records_reviewed.csv" download><strong>Image review records</strong><span>Public image IDs, angles and review outcomes</span></a>
+      <a href="downloads/bee_records_reviewed.csv" download><strong>Tag identity histories</strong><span>First / last appearance and per-tag capture timelines</span></a>
+      <a href="downloads/tagging_recapture_by_date.csv" download><strong>Capture-date timeline</strong><span>28 recorded capture dates and all graph counts</span></a>
+      <a href="downloads/calendar_timeline.csv" download><strong>Full calendar timeline</strong><span>Every day; missing capture records stay distinct from zero</span></a>
+      <a href="downloads/dataset_summary.json" download><strong>Dataset summary</strong><span>Snapshot counts and review provenance checksum</span></a>
+      <a href="downloads/README.txt" download><strong>Data definitions</strong><span>Column meanings, inclusion rules and limitations</span></a>
+    </div>
+    <details><summary>Capture-date values</summary><div class="table-scroll"><table id="daily-table"></table></div></details>
+  </section>
+  <noscript>This viewer needs JavaScript. All reviewed CSVs and graphs are available in the downloads directory.</noscript>
+  <script src="data.js"></script><script src="aruco_dict.js"></script><script src="app.js"></script>
+</body>
+</html>

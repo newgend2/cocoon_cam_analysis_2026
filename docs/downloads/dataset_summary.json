@@ -1,0 +1,16 @@
+{
+  "appearances": 1159,
+  "images": 1543,
+  "capture_dates": 28,
+  "completed_decisions": 1130,
+  "unique_identities": 995,
+  "aruco_identities": 967,
+  "n8tag_identities": 28,
+  "aruco_recapture_events": 143,
+  "outside_domain": 10,
+  "unassigned_in_domain": 6,
+  "unconfirmed_n8tag": 27,
+  "images_available": 1542,
+  "snapshot": "2026-09-16",
+  "source_review_sha256": "8d6fc3bedbce487aebdc9fb8b6aa7006aaccf29dd29cac496d4177b6a64f755e"
+}
