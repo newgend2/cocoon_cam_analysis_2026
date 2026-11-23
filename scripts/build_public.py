@@ -153,20 +153,20 @@ def plot_timeline(daily, intervals, output):
     timeline_axes = axes[:2]
     fig.suptitle('Cocoon cam · Emerald Queen 2026', x=.065, ha='left', fontsize=19, fontweight='bold')
     panels = [
-        ('new_bees_tagged', 'cumulative_unique_bees', '#246c59', 'New IDs', "cumulative ID's",
+        ('new_bees_tagged', 'cumulative_unique_bees', '#3d6584', 'New IDs', "cumulative ID's",
          'New tag identities (ArUco + n8tag)', 'Cumulative IDs'),
-        ('recaptured_aruco_individuals', 'cumulative_aruco_recaptures', '#b17d22', 'Daily recaptures',
+        ('recaptured_aruco_individuals', 'cumulative_aruco_recaptures', '#a57c3f', 'Daily recaptures',
          'cumulative recaptures', 'Later-date ArUco recapture events', 'Cumulative recaptures')]
     for ax, (field, cumulative, color, bar_label, line_label, title, right_label) in zip(timeline_axes, panels):
         bars = ax.bar(days, [r[field] for r in daily], width=.72, color=color, label=bar_label)
         total_ax = ax.twinx()
-        line, = total_ax.step(days, [r[cumulative] for r in daily], where='post', color='#345e95',
+        line, = total_ax.step(days, [r[cumulative] for r in daily], where='post', color='#2a2f35',
                               lw=2, label=line_label)
-        total_ax.set_ylabel(right_label, color='#345e95')
-        total_ax.tick_params(axis='y', colors='#345e95')
+        total_ax.set_ylabel(right_label, color='#2a2f35')
+        total_ax.tick_params(axis='y', colors='#2a2f35')
         total_ax.set_ylim(0, max(1, daily[-1][cumulative])*1.25)
         total_ax.spines[['top', 'left']].set_visible(False)
-        total_ax.spines['right'].set_color('#345e95')
+        total_ax.spines['right'].set_color('#2a2f35')
         total_ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins=5))
         ax.set_title(title, loc='left', fontsize=12, pad=10)
         ax.set_ylabel('Daily count')
@@ -183,7 +183,7 @@ def plot_timeline(daily, intervals, output):
     while cursor <= days[-1]:
         if cursor not in days:
             for ax in timeline_axes:
-                ax.axvspan(mdates.date2num(cursor)-.5, mdates.date2num(cursor)+.5, color='#f0f0ed', zorder=0)
+                ax.axvspan(mdates.date2num(cursor)-.5, mdates.date2num(cursor)+.5, color='#f2f2f0', zorder=0)
         cursor += timedelta(days=1)
     for ax in axes:
         ax.spines[['top', 'right']].set_visible(False)
@@ -218,10 +218,10 @@ def plot_timeline(daily, intervals, output):
     interval_ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins=5))
     if intervals:
         values = list(range(1, max(counts)+1))
-        interval_ax.bar(values, [counts[v] for v in values], width=.75, color='#78679c')
+        interval_ax.bar(values, [counts[v] for v in values], width=.75, color='#7d8894')
         stats = recapture_summary(intervals)
         mean = stats['mean_recapture_days']
-        interval_ax.axvline(mean, color='#345e95', ls='--', lw=2, label=f'Overall average: {mean:.1f} days')
+        interval_ax.axvline(mean, color='#2a2f35', ls='--', lw=2, label=f'Overall average: {mean:.1f} days')
         interval_ax.legend(loc='upper right', frameon=False, fontsize=11)
         interval_ax.text(.99, .74, f"{len(intervals)} recapture events · {stats['recaptured_aruco_tags']} ArUco tags",
                          transform=interval_ax.transAxes, ha='right', fontsize=10)
